@@ -1,0 +1,65 @@
+{
+  "name": "github-release-notification-api",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "An api that lets users subscribe to email notifications about github repo releases",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/migrate.js && node dist/server.js",
+    "dev": "tsx watch src/index.ts",
+    "migration:generate": "drizzle-kit generate --config drizzle.config.js",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OlegKorniychuk/github-release-notification-api.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/OlegKorniychuk/github-release-notification-api/issues"
+  },
+  "homepage": "https://github.com/OlegKorniychuk/github-release-notification-api#readme",
+  "devDependencies": {
+    "@types/dotenv": "^6.1.1",
+    "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.5.2",
+    "drizzle-kit": "^1.0.0-beta.20",
+    "eslint": "^8.57.1",
+    "jest": "^30.3.0",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.8.1",
+    "prettier-eslint": "^16.4.2",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
+  },
+  "dependencies": {
+    "@types/morgan": "^1.9.10",
+    "dotenv": "^17.4.1",
+    "drizzle-orm": "^1.0.0-beta.20",
+    "express": "^5.2.1",
+    "morgan": "^1.10.1",
+    "pg": "^8.20.0",
+    "zod": "^4.3.6"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node"
+  }
+}
