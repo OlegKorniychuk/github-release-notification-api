@@ -9,7 +9,8 @@
     "start": "node dist/migrate.js && node dist/server.js",
     "dev": "tsx watch src/index.ts",
     "migration:generate": "drizzle-kit generate --config drizzle.config.js",
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint 'src/**/*.{ts,tsx}'"
   },
   "repository": {
     "type": "git",
@@ -26,9 +27,15 @@
     "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
+    "@types/morgan": "^1.9.10",
     "@types/node": "^25.5.2",
     "drizzle-kit": "^1.0.0-beta.20",
     "eslint": "^8.57.1",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^18.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-security": "^4.0.0",
     "jest": "^30.3.0",
     "nodemon": "^3.1.14",
     "prettier": "^3.8.1",
@@ -37,7 +44,6 @@
     "typescript": "^6.0.2"
   },
   "dependencies": {
-    "@types/morgan": "^1.9.10",
     "dotenv": "^17.4.1",
     "drizzle-orm": "^1.0.0-beta.20",
     "express": "^5.2.1",
