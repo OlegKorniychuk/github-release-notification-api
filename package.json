@@ -9,8 +9,9 @@
     "start": "node dist/migrate.js && node dist/server.js",
     "dev": "tsx watch src/index.ts",
     "migration:generate": "drizzle-kit generate --config drizzle.config.js",
-    "test": "jest",
-    "lint": "eslint 'src/**/*.{ts,tsx}'"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "lint": "eslint 'src/**/*.{ts,tsx}'",
+    "format": "prettier --check 'src/**/*.{ts,tsx,json,md}'"
   },
   "repository": {
     "type": "git",
@@ -40,6 +41,7 @@
     "nodemon": "^3.1.14",
     "prettier": "^3.8.1",
     "prettier-eslint": "^16.4.2",
+    "ts-jest": "^29.4.9",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2"
   },
@@ -50,22 +52,5 @@
     "morgan": "^1.10.1",
     "pg": "^8.20.0",
     "zod": "^4.3.6"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
   }
 }

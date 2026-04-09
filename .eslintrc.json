@@ -9,6 +9,7 @@
     "sourceType": "module",
     "ecmaVersion": 2020
   },
+  "ignorePatterns": ["jest.config.ts", "drizzle.config.ts", "dist"],
   "plugins": ["@typescript-eslint", "prettier"],
   "extends": [
     "eslint:recommended",
