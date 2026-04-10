@@ -1,3 +1,17 @@
+export type GithubApiErrorResponse = {
+  error: { status: number; message: string; fullResponse: Response };
+  data: null;
+};
+
+export type GithubApiSuccessResponse<T> = {
+  error: null;
+  data: T;
+};
+
+export type GithubApiResponse<T> =
+  | GithubApiErrorResponse
+  | GithubApiSuccessResponse<T>;
+
 export interface GitHubUser {
   login: string;
   id: number;
