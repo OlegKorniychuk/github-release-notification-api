@@ -1,0 +1,7 @@
+import type { EnumFromRecord } from '../../utils/enum-from-record.js';
+
+export const Queues = {
+  email: 'email-queue',
+} as const;
+
+export type Queues = EnumFromRecord<typeof Queues>;

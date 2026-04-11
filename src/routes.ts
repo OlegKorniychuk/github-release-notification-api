@@ -16,6 +16,9 @@ import {
   listSubscriptionsSchema,
 } from './modules/subscription/subscription.schema.js';
 import { subscriptionMapper } from './modules/subscription/subscription.mapper.js';
+import { redisConnection } from './redis/redis.js';
+import { EmailQueueClient } from './services/email-queue/email-queue.service.js';
+import { EmailWorker } from './services/email-queue/email-worker.service.js';
 
 const githubApiToken = process.env.GITHUB_TOKEN;
 if (!githubApiToken) throw new Error('Github api token missing');
@@ -48,12 +51,16 @@ const mailClient = new NodemailerClient(
 );
 const notifier = new EmailNotifierStrategy(mailClient, 'http://localhost:3000');
 
+const emailQueue = new EmailQueueClient(redisConnection);
+
+new EmailWorker(redisConnection, notifier);
+
 const subscriptionService = new SubscriptionService(
   subscriptionRepository,
   githubRepoRepository,
   repoScanner,
   tokensService,
-  notifier,
+  emailQueue,
 );
 const subscriptionController = new SubscriptionController(
   subscriptionService,
