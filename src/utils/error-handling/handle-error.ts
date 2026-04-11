@@ -1,5 +1,4 @@
 import type { Request, Response, NextFunction } from 'express';
-import { DrizzleQueryError } from 'drizzle-orm/errors';
 import { GithubApiError } from './errors/github-api.error.js';
 import { handleGithubApiError } from './handlers/handle-github-api-error.js';
 import { AppError } from './errors/app.error.js';

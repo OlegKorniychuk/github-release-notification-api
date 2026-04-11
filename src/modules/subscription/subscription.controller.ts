@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { SubscriptionService } from './subscription.service.js';
+import type { ConfirmInput, SubscribeInput } from './subscription.schema.js';
 
 export class SubscriptionController {
   constructor(private readonly service: SubscriptionService) {}
@@ -9,8 +10,10 @@ export class SubscriptionController {
     res: Response,
     next: NextFunction,
   ): Promise<void> {
-    const [owner, repoName] = req.body.repo.split('/');
-    await this.service.subscribe(req.body.email, owner, repoName);
+    const body = req.body as SubscribeInput;
+
+    const [owner, repoName] = body.repo.split('/');
+    await this.service.subscribe(body.email, owner!, repoName!);
 
     res
       .status(200)
@@ -22,14 +25,9 @@ export class SubscriptionController {
     res: Response,
     next: NextFunction,
   ): Promise<void> {
-    const token = req.params['token'];
+    const params = req.params as ConfirmInput;
 
-    if (!token || typeof token !== 'string') {
-      res.status(400).json({ message: 'Token missing' });
-      return;
-    }
-
-    await this.service.confirmSubscription(token);
+    await this.service.confirmSubscription(params.token);
 
     res.status(200).json({ message: 'Subscription confirmed successfully.' });
   }

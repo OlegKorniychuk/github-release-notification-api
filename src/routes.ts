@@ -9,6 +9,11 @@ import { GithubApiImplementation } from './services/scanner/github-api.js';
 import { NotificationTokensService } from './services/notification-tokens-service/notification-tokens.service.js';
 import { EmailNotifierStrategy } from './services/notifier/email.strategy.js';
 import { NodemailerClient } from './services/notifier/nodemailer-client.js';
+import { validateRequest } from './utils/middlewares/validateRequest.js';
+import {
+  confirmSubscriptionSchema,
+  subscribeSchema,
+} from './modules/subscription/subscription.schema.js';
 
 const githubApiToken = process.env.GITHUB_TOKEN;
 if (!githubApiToken) throw new Error('Github api token missing');
@@ -54,10 +59,16 @@ const router = Router();
 
 router
   .route('/subscribe')
-  .post(subscriptionController.subscribe.bind(subscriptionController));
+  .post(
+    validateRequest(subscribeSchema),
+    subscriptionController.subscribe.bind(subscriptionController),
+  );
 
 router
   .route('/confirm/:token')
-  .get(subscriptionController.confirmSubscription.bind(subscriptionController));
+  .get(
+    validateRequest(confirmSubscriptionSchema),
+    subscriptionController.confirmSubscription.bind(subscriptionController),
+  );
 
 export default router;
