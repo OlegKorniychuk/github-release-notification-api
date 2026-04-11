@@ -5,7 +5,12 @@ import {
   subscribeSchema,
   listSubscriptionsSchema,
 } from './modules/subscription/subscription.schema.js';
-import { subscriptionController } from './dependencies-container.js';
+import {
+  cacheService,
+  subscriptionController,
+  subscriptionService,
+} from './dependencies-container.js';
+import { routeCache } from './services/cache/cache.middleware.js';
 
 const router = Router();
 
@@ -30,11 +35,14 @@ router
     subscriptionController.unsubscribe.bind(subscriptionController),
   );
 
-router
-  .route('/subscriptions')
-  .get(
-    validateRequest(listSubscriptionsSchema),
-    subscriptionController.getSubscriptions.bind(subscriptionController),
-  );
+router.route('/subscriptions').get(
+  validateRequest(listSubscriptionsSchema),
+  routeCache(
+    cacheService,
+    (req) => subscriptionService.getCacheKey(req.query.email as string),
+    600,
+  ),
+  subscriptionController.getSubscriptions.bind(subscriptionController),
+);
 
 export default router;

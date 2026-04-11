@@ -1,6 +1,7 @@
 import type { GithubRepoRepository } from '../../repositories/github-repo/github-repo.repository.js';
 import type { SubscriptionRepository } from '../../repositories/subscription/subscription.repository.js';
 import type { SubscriptionWithRepository } from '../../repositories/subscription/subscription.types.js';
+import type { CacheService } from '../../services/cache/cache.service.js';
 import type { EmailQueueClient } from '../../services/email-queue/email-queue.service.js';
 import type { NotificationTokensService } from '../../services/notification-tokens-service/notification-tokens.service.js';
 import { NotificationTokenTypesEnum } from '../../services/notification-tokens-service/token-types.enum.js';
@@ -17,7 +18,12 @@ export class SubscriptionService {
     private readonly repoScanner: RepositoryScanner,
     private readonly tokensService: NotificationTokensService,
     private readonly emailQueue: EmailQueueClient,
+    private readonly cacheService: CacheService,
   ) {}
+
+  public getCacheKey(email: string): string {
+    return `cache:subscriptions:${email}`;
+  }
 
   public async subscribe(
     email: string,
@@ -78,6 +84,8 @@ export class SubscriptionService {
         AppErrorTypesEnum.invalidNotificationToken,
         'Invalid confirmation token',
       );
+
+    await this.cacheService.del(this.getCacheKey(confirmedSubscription.email));
   }
 
   public async unsubscribe(token: string): Promise<void> {
@@ -101,6 +109,8 @@ export class SubscriptionService {
         AppErrorTypesEnum.entityNotFound,
         'Subscription not found',
       );
+
+    await this.cacheService.del(this.getCacheKey(deletedSubscription.email));
   }
 
   public async getSubscriptions(

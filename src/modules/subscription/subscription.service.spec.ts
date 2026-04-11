@@ -8,6 +8,7 @@ import type { SubscriptionRepository } from '../../repositories/subscription/sub
 import type { NotificationTokensService } from '../../services/notification-tokens-service/notification-tokens.service.js';
 import type { RepositoryScanner } from '../../services/scanner/repository-scanner.service.js';
 import type { EmailQueueClient } from '../../services/email-queue/email-queue.service.js';
+import type { CacheService } from '../../services/cache/cache.service.js';
 
 describe('SubscriptionService', () => {
   let service: SubscriptionService;
@@ -17,6 +18,7 @@ describe('SubscriptionService', () => {
   let mockRepoScanner: jest.Mocked<RepositoryScanner>;
   let mockTokensService: jest.Mocked<NotificationTokensService>;
   let mockEmailQueue: jest.Mocked<EmailQueueClient>;
+  let mockCacheService: jest.Mocked<CacheService>;
 
   beforeEach(() => {
     mockSubscriptionRepo = {
@@ -46,12 +48,19 @@ describe('SubscriptionService', () => {
       queueNotificationEmail: jest.fn(),
     } as unknown as jest.Mocked<EmailQueueClient>;
 
+    mockCacheService = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+    } as unknown as jest.Mocked<CacheService>;
+
     service = new SubscriptionService(
       mockSubscriptionRepo,
       mockGithubRepo,
       mockRepoScanner,
       mockTokensService,
       mockEmailQueue,
+      mockCacheService,
     );
   });
 
