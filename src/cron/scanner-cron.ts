@@ -1,6 +1,6 @@
 import { Queue, Worker } from 'bullmq';
 import type { Redis } from 'ioredis';
-import { Queues } from '../email-queue/queues.enum.js';
+import { Queues } from '../services/email-queue/queues.enum.js';
 import type { ScanRunner } from './scan-runner.js';
 
 export class ScannerCron {
@@ -12,7 +12,7 @@ export class ScannerCron {
     redisConnection: Redis,
     private readonly coordinator: ScanRunner,
   ) {
-    this.queue = new Queue('scanner-queue', { connection: redisConnection });
+    this.queue = new Queue(Queues.scanner, { connection: redisConnection });
 
     this.worker = new Worker(
       Queues.scanner,

@@ -19,8 +19,8 @@ import { subscriptionMapper } from './modules/subscription/subscription.mapper.j
 import { redisConnection } from './redis/redis.js';
 import { EmailQueueClient } from './services/email-queue/email-queue.service.js';
 import { EmailWorker } from './services/email-queue/email-worker.service.js';
-import { ScanRunner } from './services/scanner/scan-runner.js';
-import { ScannerCron } from './services/scanner/scanner-cron.js';
+import { ScanRunner } from './cron/scan-runner.js';
+import { ScannerCron } from './cron/scanner-cron.js';
 
 const githubApiToken = process.env.GITHUB_TOKEN;
 if (!githubApiToken) throw new Error('Github api token missing');
