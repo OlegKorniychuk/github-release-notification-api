@@ -25,7 +25,7 @@ _(Note: Some infrastructure variables are hardcoded in the docker-compose.yml en
 To start the entire system (Database, Redis, and the API), run:
 
 ```console
-~$ docker-compose up --build
+docker-compose up --build
 ```
 
 The database migrations will automatically execute on application startup. API will be available at <http://localhost:3000>. Protected endpoints require x-api-key header.
