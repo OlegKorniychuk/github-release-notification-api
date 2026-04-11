@@ -1,0 +1,207 @@
+import { describe, expect, it, beforeEach, jest } from '@jest/globals';
+import { SubscriptionService } from './subscription.service.js';
+import { AppErrorTypesEnum } from '../../utils/error-handling/errors/app.error.js';
+import { NotificationTokenTypesEnum } from '../../services/notification-tokens-service/token-types.enum.js';
+
+import type { GithubRepoRepository } from '../../repositories/github-repo/github-repo.repository.js';
+import type { SubscriptionRepository } from '../../repositories/subscription/subscription.repository.js';
+import type { NotificationTokensService } from '../../services/notification-tokens-service/notification-tokens.service.js';
+import type { NotifierStrategy } from '../../services/notifier/notifier.strategy.js';
+import type { RepositoryScanner } from '../../services/scanner/repository-scanner.service.js';
+
+describe('SubscriptionService', () => {
+  let service: SubscriptionService;
+
+  let mockSubscriptionRepo: jest.Mocked<SubscriptionRepository>;
+  let mockGithubRepo: jest.Mocked<GithubRepoRepository>;
+  let mockRepoScanner: jest.Mocked<RepositoryScanner>;
+  let mockTokensService: jest.Mocked<NotificationTokensService>;
+  let mockNotifier: jest.Mocked<NotifierStrategy>;
+
+  beforeEach(() => {
+    mockSubscriptionRepo = {
+      createOne: jest.fn(),
+      confirm: jest.fn(),
+      findOneByRepoAndEmail: jest.fn(),
+    } as unknown as jest.Mocked<SubscriptionRepository>;
+
+    mockGithubRepo = {
+      findByName: jest.fn(),
+      createOne: jest.fn(),
+    } as unknown as jest.Mocked<GithubRepoRepository>;
+
+    mockRepoScanner = {
+      verifyRepository: jest.fn(),
+    } as unknown as jest.Mocked<RepositoryScanner>;
+
+    mockTokensService = {
+      generateConfirmToken: jest.fn(),
+      validateToken: jest.fn(),
+    } as unknown as jest.Mocked<NotificationTokensService>;
+
+    mockNotifier = {
+      sendSubscriptionConfirmation: jest.fn(),
+    } as unknown as jest.Mocked<NotifierStrategy>;
+
+    service = new SubscriptionService(
+      mockSubscriptionRepo,
+      mockGithubRepo,
+      mockRepoScanner,
+      mockTokensService,
+      mockNotifier,
+    );
+  });
+
+  describe('subscribe', () => {
+    const mockEmail = 'test@example.com';
+    const mockOwner = 'golang';
+    const mockRepoName = 'go';
+    const mockRepoFullName = 'golang/go';
+    const mockRepoId = 'repo-uuid-123';
+    const mockSubId = 'sub-uuid-456';
+    const mockToken = 'mock-jwt-token';
+
+    it('should create subscription and send email when repository already exists in DB', async () => {
+      mockGithubRepo.findByName.mockResolvedValueOnce({
+        id: mockRepoId,
+        name: mockRepoFullName,
+      } as any);
+      mockSubscriptionRepo.createOne.mockResolvedValueOnce({
+        id: mockSubId,
+      } as any);
+      mockTokensService.generateConfirmToken.mockReturnValueOnce(mockToken);
+
+      await service.subscribe(mockEmail, mockOwner, mockRepoName);
+
+      expect(mockGithubRepo.findByName).toHaveBeenCalledWith(mockRepoFullName);
+      expect(mockRepoScanner.verifyRepository).not.toHaveBeenCalled();
+      expect(mockGithubRepo.createOne).not.toHaveBeenCalled();
+
+      expect(mockSubscriptionRepo.createOne).toHaveBeenCalledWith({
+        email: mockEmail,
+        githubRepositoryId: mockRepoId,
+      });
+      expect(mockTokensService.generateConfirmToken).toHaveBeenCalledWith(
+        mockSubId,
+      );
+      expect(mockNotifier.sendSubscriptionConfirmation).toHaveBeenCalledWith(
+        mockEmail,
+        mockToken,
+      );
+    });
+
+    it('should throw AppError if repository exists and user is already subscribed', async () => {
+      mockGithubRepo.findByName.mockResolvedValueOnce({
+        id: mockRepoId,
+        name: mockRepoFullName,
+      } as any);
+      mockSubscriptionRepo.findOneByRepoAndEmail.mockResolvedValueOnce({
+        id: mockSubId,
+      } as any);
+
+      await expect(
+        service.subscribe(mockEmail, mockOwner, mockRepoName),
+      ).rejects.toMatchObject({
+        type: AppErrorTypesEnum.entityExists,
+        message: 'This user is already subscribed to this repo',
+      });
+
+      expect(mockSubscriptionRepo.findOneByRepoAndEmail).toHaveBeenCalledWith(
+        mockEmail,
+        mockRepoId,
+      );
+      expect(mockSubscriptionRepo.createOne).not.toHaveBeenCalled();
+      expect(mockTokensService.generateConfirmToken).not.toHaveBeenCalled();
+      expect(mockNotifier.sendSubscriptionConfirmation).not.toHaveBeenCalled();
+    });
+
+    it('should verify with GitHub and save repo when repository does NOT exist in DB', async () => {
+      mockGithubRepo.findByName.mockResolvedValueOnce(null);
+      mockRepoScanner.verifyRepository.mockResolvedValueOnce(undefined);
+      mockGithubRepo.createOne.mockResolvedValueOnce({
+        id: mockRepoId,
+        name: mockRepoFullName,
+      } as any);
+      mockSubscriptionRepo.createOne.mockResolvedValueOnce({
+        id: mockSubId,
+      } as any);
+      mockTokensService.generateConfirmToken.mockReturnValueOnce(mockToken);
+
+      await service.subscribe(mockEmail, mockOwner, mockRepoName);
+
+      expect(mockRepoScanner.verifyRepository).toHaveBeenCalledWith(
+        mockOwner,
+        mockRepoName,
+      );
+      expect(mockGithubRepo.createOne).toHaveBeenCalledWith({
+        name: mockRepoFullName,
+      });
+    });
+
+    it('should propagate errors if GitHub verification fails', async () => {
+      mockGithubRepo.findByName.mockResolvedValueOnce(null);
+      mockRepoScanner.verifyRepository.mockRejectedValueOnce(
+        new Error('GitHub API Error: 404'),
+      );
+
+      await expect(
+        service.subscribe(mockEmail, mockOwner, mockRepoName),
+      ).rejects.toThrow('GitHub API Error: 404');
+
+      expect(mockGithubRepo.createOne).not.toHaveBeenCalled();
+      expect(mockSubscriptionRepo.createOne).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('confirmSubscription', () => {
+    const mockToken = 'valid.jwt.token';
+    const mockSubId = 'sub-uuid-123';
+
+    it('should successfully confirm subscription if token is valid', async () => {
+      mockTokensService.validateToken.mockReturnValueOnce({
+        subscriptionId: mockSubId,
+        type: NotificationTokenTypesEnum.confirm,
+      } as any);
+      mockSubscriptionRepo.confirm.mockResolvedValueOnce({
+        id: mockSubId,
+        confirmed: true,
+      } as any);
+
+      await service.confirmSubscription(mockToken);
+
+      expect(mockTokensService.validateToken).toHaveBeenCalledWith(
+        mockToken,
+        NotificationTokenTypesEnum.confirm,
+      );
+      expect(mockSubscriptionRepo.confirm).toHaveBeenCalledWith(mockSubId);
+    });
+
+    it('should throw AppError if the token is completely invalid or expired', async () => {
+      mockTokensService.validateToken.mockReturnValueOnce(null);
+
+      await expect(
+        service.confirmSubscription(mockToken),
+      ).rejects.toMatchObject({
+        type: AppErrorTypesEnum.invalidNotificationToken,
+        message: 'Invalid confirmation token',
+      });
+
+      expect(mockSubscriptionRepo.confirm).not.toHaveBeenCalled();
+    });
+
+    it('should throw AppError if token is valid but subscription record does not exist in DB', async () => {
+      mockTokensService.validateToken.mockReturnValueOnce({
+        subscriptionId: mockSubId,
+        type: NotificationTokenTypesEnum.confirm,
+      } as any);
+      mockSubscriptionRepo.confirm.mockResolvedValueOnce(null);
+
+      await expect(
+        service.confirmSubscription(mockToken),
+      ).rejects.toMatchObject({
+        type: AppErrorTypesEnum.invalidNotificationToken,
+        message: 'Invalid confirmation token',
+      });
+    });
+  });
+});
