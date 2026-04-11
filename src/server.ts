@@ -19,11 +19,21 @@ const startServer = async (app: Express, scannerCron: ScannerCron) => {
 
 startServer(app, scannerCron)
   .then((server) => {
-    const shutdown = async () => {
-      console.log('Server shutting down...');
+    let isShuttingDown = false;
 
-      server.close(async (err) => {
-        if (err) {
+    const shutdown = async (signal: string) => {
+      if (isShuttingDown) {
+        console.log(
+          `Received ${signal}, but shutdown is already in progress...`,
+        );
+        return;
+      }
+
+      isShuttingDown = true;
+      console.log(`\n${signal} received. Server shutting down...`);
+
+      server.close(async (err: any) => {
+        if (err && err.code !== 'ERR_SERVER_NOT_RUNNING') {
           console.error('Error closing Express server:', err);
           process.exit(1);
         }
@@ -40,8 +50,8 @@ startServer(app, scannerCron)
       });
     };
 
-    process.on('SIGINT', shutdown);
-    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', () => shutdown('SIGINT'));
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
   })
   .catch((error) => {
     console.error('Failed to start server:', error);

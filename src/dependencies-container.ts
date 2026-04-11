@@ -7,6 +7,7 @@ import { SubscriptionService } from './modules/subscription/subscription.service
 import { redisConnection } from './redis/redis.js';
 import { GithubRepoRepository } from './repositories/github-repo/github-repo.repository.js';
 import { SubscriptionRepository } from './repositories/subscription/subscription.repository.js';
+import { CacheService } from './services/cache/cache.service.js';
 import { EmailQueueClient } from './services/email-queue/email-queue.service.js';
 import { EmailWorker } from './services/email-queue/email-worker.service.js';
 import { NotificationTokensService } from './services/notification-tokens-service/notification-tokens.service.js';
@@ -47,12 +48,15 @@ const notifier = new EmailNotifierStrategy(mailClient, 'http://localhost:3000');
 const emailQueue = new EmailQueueClient(redisConnection);
 
 // 4. Services & Controllers
-const subscriptionService = new SubscriptionService(
+export const cacheService = new CacheService(redisConnection);
+
+export const subscriptionService = new SubscriptionService(
   subscriptionRepository,
   githubRepoRepository,
   repoScanner,
   tokensService,
   emailQueue,
+  cacheService,
 );
 
 export const subscriptionController = new SubscriptionController(
