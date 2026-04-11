@@ -1,15 +1,17 @@
-import { GitHubApiError } from '../../utils/appError.js';
+import {
+  GithubApiError,
+  GithubApiErrorTypesEnum,
+} from '../../utils/error-handling/errors/github-api.error.js';
 import type { GithubApi } from './github-api.interface.js';
 import type { GithubApiErrorResponse, GitHubRelease } from './github.types.js';
 
 export class RepositoryScanner {
   constructor(private readonly githubApi: GithubApi) {}
 
-  public async verifyRepository(owner: string, repo: string): Promise<boolean> {
+  public async verifyRepository(owner: string, repo: string): Promise<void> {
     const response = await this.githubApi.getRepository(owner, repo);
 
-    if (!response.error) return true;
-    if (response.error.status === 404) return false;
+    if (!response.error) return;
 
     this.handleErrorResponse(response);
   }
@@ -40,20 +42,25 @@ export class RepositoryScanner {
         ? parseInt(resetHeader, 10) * 1000
         : undefined;
 
-      throw new GitHubApiError(
-        429,
+      throw new GithubApiError(
+        GithubApiErrorTypesEnum.rateLimitExceeded,
         'GitHub API Rate Limit Exceeded',
-        resetTimeMs,
+        { retryAfterMs: resetTimeMs },
       );
     }
 
     if (errorResponse.error.status === 404) {
-      throw new GitHubApiError(404, 'Repository or Release not found');
+      throw new GithubApiError(
+        GithubApiErrorTypesEnum.notFound,
+        'Repository not found on Github',
+        { entity: 'repository' },
+      );
     }
 
-    throw new GitHubApiError(
-      errorResponse.error.status,
+    throw new GithubApiError(
+      GithubApiErrorTypesEnum.other,
       `GitHub API Error: ${errorResponse.error.message}`,
+      { status: errorResponse.error.status },
     );
   }
 }
