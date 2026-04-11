@@ -33,4 +33,18 @@ export class SubscriptionRepository {
 
     return result || null;
   }
+
+  public async findOneByRepoAndEmail(
+    email: string,
+    githubRepositoryId: string,
+  ): Promise<Subscription | null> {
+    const result = await this.db.query.subscriptions.findFirst({
+      where: {
+        email,
+        githubRepositoryId,
+      },
+    });
+
+    return result || null;
+  }
 }

@@ -29,6 +29,16 @@ export class SubscriptionService {
     if (!repo) {
       await this.repoScanner.verifyRepository(owner, repositoryName);
       repo = await this.githubRepoRepository.createOne({ name: repoFullName });
+    } else {
+      const existingSubscription =
+        await this.subscriptionRepository.findOneByRepoAndEmail(email, repo.id);
+
+      if (existingSubscription)
+        throw new AppError(
+          AppErrorTypesEnum.entityExists,
+          'This user is already subscribed to this repo',
+          { entity: 'subscription' },
+        );
     }
 
     const subscription = await this.subscriptionRepository.createOne({

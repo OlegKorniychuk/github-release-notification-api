@@ -2,7 +2,6 @@ import type { Request, Response, NextFunction } from 'express';
 import { DrizzleQueryError } from 'drizzle-orm/errors';
 import { GithubApiError } from './errors/github-api.error.js';
 import { handleGithubApiError } from './handlers/handle-github-api-error.js';
-import { handleDatabaseError } from './handlers/handle-drizzle-error.js';
 import { AppError } from './errors/app.error.js';
 import { handleAppError } from './handlers/handle-app-error.js';
 
@@ -12,10 +11,6 @@ export function handleError(
   res: Response,
   next: NextFunction,
 ): void {
-  if (err instanceof DrizzleQueryError) {
-    return handleDatabaseError(err, res);
-  }
-
   if (err instanceof GithubApiError) {
     return handleGithubApiError(err, res);
   }
