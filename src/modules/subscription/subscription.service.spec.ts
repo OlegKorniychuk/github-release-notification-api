@@ -23,6 +23,7 @@ describe('SubscriptionService', () => {
       createOne: jest.fn(),
       confirm: jest.fn(),
       findOneByRepoAndEmail: jest.fn(),
+      deleteOne: jest.fn(),
     } as unknown as jest.Mocked<SubscriptionRepository>;
 
     mockGithubRepo = {
@@ -201,6 +202,53 @@ describe('SubscriptionService', () => {
       ).rejects.toMatchObject({
         type: AppErrorTypesEnum.invalidNotificationToken,
         message: 'Invalid confirmation token',
+      });
+    });
+  });
+
+  describe('unsubscribe', () => {
+    const mockToken = 'valid.unsubscribe.jwt.token';
+    const mockSubId = 'sub-uuid-789';
+
+    it('should successfully delete the subscription if token is valid', async () => {
+      mockTokensService.validateToken.mockReturnValueOnce({
+        subscriptionId: mockSubId,
+        type: NotificationTokenTypesEnum.unsibscribe,
+      } as any);
+      mockSubscriptionRepo.deleteOne.mockResolvedValueOnce({
+        id: mockSubId,
+      } as any);
+
+      await service.unsubscribe(mockToken);
+
+      expect(mockTokensService.validateToken).toHaveBeenCalledWith(
+        mockToken,
+        NotificationTokenTypesEnum.unsibscribe,
+      );
+      expect(mockSubscriptionRepo.deleteOne).toHaveBeenCalledWith(mockSubId);
+    });
+
+    it('should throw AppError if the token is completely invalid', async () => {
+      mockTokensService.validateToken.mockReturnValueOnce(null);
+
+      await expect(service.unsubscribe(mockToken)).rejects.toMatchObject({
+        type: AppErrorTypesEnum.invalidNotificationToken,
+        message: 'Invalid unsubscription token',
+      });
+
+      expect(mockSubscriptionRepo.deleteOne).not.toHaveBeenCalled();
+    });
+
+    it('should throw AppError if token is valid but subscription was already deleted', async () => {
+      mockTokensService.validateToken.mockReturnValueOnce({
+        subscriptionId: mockSubId,
+        type: NotificationTokenTypesEnum.unsibscribe,
+      } as any);
+      mockSubscriptionRepo.deleteOne.mockResolvedValueOnce(null);
+
+      await expect(service.unsubscribe(mockToken)).rejects.toMatchObject({
+        type: AppErrorTypesEnum.entityNotFound,
+        message: 'Subscription not found',
       });
     });
   });

@@ -1,6 +1,9 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { SubscriptionService } from './subscription.service.js';
-import type { ConfirmInput, SubscribeInput } from './subscription.schema.js';
+import type {
+  SubscriptionTokenInput,
+  SubscribeInput,
+} from './subscription.schema.js';
 
 export class SubscriptionController {
   constructor(private readonly service: SubscriptionService) {}
@@ -25,10 +28,22 @@ export class SubscriptionController {
     res: Response,
     next: NextFunction,
   ): Promise<void> {
-    const params = req.params as ConfirmInput;
+    const params = req.params as SubscriptionTokenInput;
 
     await this.service.confirmSubscription(params.token);
 
     res.status(200).json({ message: 'Subscription confirmed successfully.' });
+  }
+
+  public async unsubscribe(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    const params = req.params as SubscriptionTokenInput;
+
+    await this.service.unsubscribe(params.token);
+
+    res.status(200).json({ message: 'Unsubscribed successfully.' });
   }
 }

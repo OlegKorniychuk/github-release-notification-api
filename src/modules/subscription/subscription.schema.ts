@@ -14,11 +14,13 @@ export const subscribeSchema = z.object({
   }),
 });
 
-export const confirmSubscriptionSchema = z.object({
+export const subscriptionTokenSchema = z.object({
   params: z.object({
-    token: z.jwt('Confirmation token must be a JWT'),
+    token: z.jwt('Token must be a JWT'),
   }),
 });
 
 export type SubscribeInput = z.infer<typeof subscribeSchema>['body'];
-export type ConfirmInput = z.infer<typeof confirmSubscriptionSchema>['params'];
+export type SubscriptionTokenInput = z.infer<
+  typeof subscriptionTokenSchema
+>['params'];

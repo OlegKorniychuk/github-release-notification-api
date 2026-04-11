@@ -11,7 +11,7 @@ import { EmailNotifierStrategy } from './services/notifier/email.strategy.js';
 import { NodemailerClient } from './services/notifier/nodemailer-client.js';
 import { validateRequest } from './utils/middlewares/validateRequest.js';
 import {
-  confirmSubscriptionSchema,
+  subscriptionTokenSchema,
   subscribeSchema,
 } from './modules/subscription/subscription.schema.js';
 
@@ -67,8 +67,15 @@ router
 router
   .route('/confirm/:token')
   .get(
-    validateRequest(confirmSubscriptionSchema),
+    validateRequest(subscriptionTokenSchema),
     subscriptionController.confirmSubscription.bind(subscriptionController),
+  );
+
+router
+  .route('/unsubscribe/:token')
+  .get(
+    validateRequest(subscriptionTokenSchema),
+    subscriptionController.unsubscribe.bind(subscriptionController),
   );
 
 export default router;

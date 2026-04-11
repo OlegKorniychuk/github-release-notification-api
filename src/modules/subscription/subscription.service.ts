@@ -75,4 +75,27 @@ export class SubscriptionService {
         'Invalid confirmation token',
       );
   }
+
+  public async unsubscribe(token: string): Promise<void> {
+    const tokenPayload = this.tokensService.validateToken(
+      token,
+      NotificationTokenTypesEnum.unsibscribe,
+    );
+
+    if (!tokenPayload)
+      throw new AppError(
+        AppErrorTypesEnum.invalidNotificationToken,
+        'Invalid unsubscription token',
+      );
+
+    const deletedSubscription = await this.subscriptionRepository.deleteOne(
+      tokenPayload.subscriptionId,
+    );
+
+    if (!deletedSubscription)
+      throw new AppError(
+        AppErrorTypesEnum.entityNotFound,
+        'Subscription not found',
+      );
+  }
 }

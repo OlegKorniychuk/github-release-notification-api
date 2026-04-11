@@ -12,6 +12,10 @@ export function handleAppError(err: AppError, res: Response): void {
       const entity = err.details.entity || 'entity';
       res.status(409).json({ message: `This ${entity} already exists` });
     },
+    [AppErrorTypesEnum.entityNotFound]: (err, res) => {
+      const entity = err.details.entity || 'entity';
+      res.status(404).json({ message: `This ${entity} does not exists` });
+    },
     [AppErrorTypesEnum.other]: (err, res) => {
       console.error(err);
       res.status(500).json({ message: 'Unexpected server error' });

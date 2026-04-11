@@ -4,6 +4,7 @@ export const AppErrorTypesEnum = {
   other: 'other',
   invalidNotificationToken: 'invalidNotificationToken',
   entityExists: 'entityExists',
+  entityNotFound: 'entityNotFound',
 } as const;
 
 export type AppErrorTypesEnum = EnumFromRecord<typeof AppErrorTypesEnum>;

@@ -47,4 +47,13 @@ export class SubscriptionRepository {
 
     return result || null;
   }
+
+  public async deleteOne(id: string): Promise<Subscription | null> {
+    const [result] = await this.db
+      .delete(subscriptions)
+      .where(eq(subscriptions.id, id))
+      .returning();
+
+    return result || null;
+  }
 }
