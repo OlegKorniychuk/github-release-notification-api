@@ -1,3 +1,4 @@
+import { env } from './config/envs.js';
 import { ScanRunner } from './cron/scan-runner.js';
 import { ScannerCron } from './cron/scanner-cron.js';
 import { drizzleClient, pool } from './db/client.js';
@@ -16,38 +17,25 @@ import { NodemailerClient } from './services/notifier/nodemailer-client.js';
 import { GithubApiImplementation } from './services/scanner/github-api.js';
 import { RepositoryScanner } from './services/scanner/repository-scanner.service.js';
 
-// 1. Environment Variables Validation
-const env = {
-  githubToken: process.env.GITHUB_TOKEN,
-  tokenSecret: process.env.NOTIFICATION_TOKEN_SECRET,
-  emailService: process.env.EMAIL_SERVICE,
-  emailUser: process.env.EMAIL_SERVICE_USERNAME,
-  emailPass: process.env.EMAIL_SERVICE_PASSWORD,
-};
-
-if (Object.values(env).some((v) => !v)) {
-  throw new Error(
-    'Missing required environment variables for dependencies container',
-  );
-}
-
-// 2. Repositories & APIs
+// Repositories & APIs
 const subscriptionRepository = new SubscriptionRepository(drizzleClient);
 const githubRepoRepository = new GithubRepoRepository(drizzleClient);
-const githubApi = new GithubApiImplementation(env.githubToken!);
+const githubApi = new GithubApiImplementation(env.GITHUB_TOKEN);
 const repoScanner = new RepositoryScanner(githubApi);
 
-// 3. Utilities & Clients
-const tokensService = new NotificationTokensService(env.tokenSecret!);
+// Utilities & Clients
+const tokensService = new NotificationTokensService(
+  env.NOTIFICATION_TOKEN_SECRET,
+);
 const mailClient = new NodemailerClient(
-  env.emailService!,
-  env.emailUser!,
-  env.emailPass!,
+  env.EMAIL_SERVICE,
+  env.EMAIL_SERVICE_USERNAME,
+  env.EMAIL_SERVICE_PASSWORD,
 );
 const notifier = new EmailNotifierStrategy(mailClient, 'http://localhost:3000');
 const emailQueue = new EmailQueueClient(redisConnection);
 
-// 4. Services & Controllers
+// Services & Controllers
 export const cacheService = new CacheService(redisConnection);
 
 export const subscriptionService = new SubscriptionService(
@@ -64,7 +52,7 @@ export const subscriptionController = new SubscriptionController(
   subscriptionMapper,
 );
 
-// 5. Background Jobs
+// Background Jobs
 const scanRunner = new ScanRunner(
   githubRepoRepository,
   subscriptionRepository,
