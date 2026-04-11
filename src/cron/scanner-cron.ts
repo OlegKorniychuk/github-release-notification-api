@@ -6,7 +6,7 @@ import type { ScanRunner } from './scan-runner.js';
 export class ScannerCron {
   private readonly queue: Queue;
   private readonly worker: Worker;
-  private readonly CRON_PATTERN = '* * * * *';
+  private readonly CRON_PATTERN = '0 * * * *';
 
   constructor(
     redisConnection: Redis,
