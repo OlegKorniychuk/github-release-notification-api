@@ -1,0 +1,68 @@
+import type { GithubRepoRepository } from '../../repositories/github-repo/github-repo.repository.js';
+import type { SubscriptionRepository } from '../../repositories/subscription/subscription.repository.js';
+import type { NotificationTokensService } from '../../services/notification-tokens-service/notification-tokens.service.js';
+import { NotificationTokenTypesEnum } from '../../services/notification-tokens-service/token-types.enum.js';
+import type { NotifierStrategy } from '../../services/notifier/notifier.strategy.js';
+import type { RepositoryScanner } from '../../services/scanner/repository-scanner.service.js';
+import {
+  AppError,
+  AppErrorTypesEnum,
+} from '../../utils/error-handling/errors/app.error.js';
+
+export class SubscriptionService {
+  constructor(
+    private readonly subscriptionRepository: SubscriptionRepository,
+    private readonly githubRepoRepository: GithubRepoRepository,
+    private readonly repoScanner: RepositoryScanner,
+    private readonly tokensService: NotificationTokensService,
+    private readonly notifier: NotifierStrategy,
+  ) {}
+
+  public async subscribe(
+    email: string,
+    owner: string,
+    repositoryName: string,
+  ): Promise<void> {
+    const repoFullName = `${owner}/${repositoryName}`;
+    let repo = await this.githubRepoRepository.findByName(repoFullName);
+
+    if (!repo) {
+      await this.repoScanner.verifyRepository(owner, repositoryName);
+      repo = await this.githubRepoRepository.createOne({ name: repoFullName });
+    }
+
+    const subscription = await this.subscriptionRepository.createOne({
+      email,
+      githubRepositoryId: repo.id,
+    });
+
+    const confirmToken = this.tokensService.generateConfirmToken(
+      subscription.id,
+    );
+
+    await this.notifier.sendSubscriptionConfirmation(email, confirmToken);
+  }
+
+  public async confirmSubscription(token: string): Promise<void> {
+    const tokenPayload = this.tokensService.validateToken(
+      token,
+      NotificationTokenTypesEnum.confirm,
+    );
+
+    if (!tokenPayload)
+      throw new AppError(
+        AppErrorTypesEnum.invalidNotificationToken,
+        'Invalid confirmation token',
+      );
+
+    const confirmedSubscription = await this.subscriptionRepository.confirm(
+      tokenPayload.subscriptionId,
+    );
+
+    if (!confirmedSubscription)
+      throw new AppError(
+        AppErrorTypesEnum.invalidNotificationToken,
+        'Invalid confirmation token',
+      );
+  }
+}

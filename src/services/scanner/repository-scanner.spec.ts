@@ -1,6 +1,9 @@
 import { describe, expect, it, beforeEach, jest } from '@jest/globals';
 import { RepositoryScanner } from './repository-scanner.service.js';
-import { GitHubApiError } from '../../utils/appError.js';
+import {
+  GithubApiError,
+  GithubApiErrorTypesEnum,
+} from '../../utils/error-handling/errors/github-api.error.js';
 import type { GithubApi } from './github-api.interface.js';
 import type {
   GithubApiResponse,
@@ -44,28 +47,31 @@ describe('RepositoryScanner', () => {
   });
 
   describe('verifyRepository', () => {
-    it('should return true when the repository exists', async () => {
+    it('should return when the repository exists', async () => {
       mockGithubApi.getRepository.mockResolvedValueOnce(
         mockSuccess({ id: 1, full_name: 'golang/go' } as GitHubRepository),
       );
 
-      const result = await scanner.verifyRepository('golang', 'go');
+      expect(scanner.verifyRepository('golang', 'go')).resolves.not.toThrow();
 
       expect(mockGithubApi.getRepository).toHaveBeenCalledWith('golang', 'go');
-      expect(result).toBe(true);
     });
 
-    it('should return false when the repository is not found', async () => {
+    it('should throw GithubApiError when the repository is not found', async () => {
       mockGithubApi.getRepository.mockResolvedValueOnce(
         mockError(404, 'Not Found'),
       );
 
-      const result = await scanner.verifyRepository('invalid', 'repo');
-
-      expect(result).toBe(false);
+      try {
+        await scanner.verifyRepository('invalid', 'repo');
+      } catch (err: any) {
+        expect(err).toBeInstanceOf(GithubApiError);
+        expect(err.type).toBe(GithubApiErrorTypesEnum.notFound);
+        expect(err.details.entity).toBe('repository');
+      }
     });
 
-    it('should throw GitHubApiError and parse rate limit headers on 429', async () => {
+    it('should throw GithubApiError and parse rate limit headers on 429', async () => {
       const resetTimeEpoch = Math.floor(Date.now() / 1000) + 3600;
       const headers = new Map([
         ['x-ratelimit-reset', resetTimeEpoch.toString()],
@@ -78,20 +84,23 @@ describe('RepositoryScanner', () => {
       try {
         await scanner.verifyRepository('golang', 'go');
       } catch (error: any) {
-        expect(error).toBeInstanceOf(GitHubApiError);
-        expect(error.statusCode || error.status).toBe(429);
-        expect(error.retryAfterMs).toBe(resetTimeEpoch * 1000);
+        expect(error).toBeInstanceOf(GithubApiError);
+        expect(error.type).toBe(GithubApiErrorTypesEnum.rateLimitExceeded);
+        expect(error.details.retryAfterMs).toBe(resetTimeEpoch * 1000);
       }
     });
 
-    it('should throw generic GitHubApiError for unhandled HTTP errors', async () => {
+    it('should throw generic GithubApiError for unhandled HTTP errors', async () => {
       mockGithubApi.getRepository.mockResolvedValueOnce(
         mockError(500, 'Internal Server Error'),
       );
 
-      await expect(scanner.verifyRepository('golang', 'go')).rejects.toThrow(
-        /GitHub API Error: Internal Server Error/,
-      );
+      try {
+        await scanner.verifyRepository('golang', 'go');
+      } catch (err: any) {
+        expect(err).toBeInstanceOf(GithubApiError);
+        expect(err.type).toBe(GithubApiErrorTypesEnum.other);
+      }
     });
   });
 
@@ -121,13 +130,13 @@ describe('RepositoryScanner', () => {
       expect(result).toBeNull();
     });
 
-    it('should re-throw GitHubApiError for rate limit errors during release fetch', async () => {
+    it('should re-throw GithubApiError for rate limit errors during release fetch', async () => {
       mockGithubApi.getLatestRepositoryRelease.mockResolvedValueOnce(
         mockError(403, 'Rate Limit'),
       );
 
       await expect(scanner.getLatestRelease('golang', 'go')).rejects.toThrow(
-        GitHubApiError,
+        GithubApiError,
       );
     });
   });

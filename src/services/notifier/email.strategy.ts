@@ -12,7 +12,7 @@ export class EmailNotifierStrategy implements NotifierStrategy {
     email: string,
     token: string,
   ): Promise<void> {
-    const confirmUrl = `${this.appDomain}/api/confirm/${token}`;
+    const confirmUrl = `${this.appDomain}/confirm/${token}`;
 
     await this.mailClient.sendMail({
       to: [email],
@@ -27,7 +27,7 @@ export class EmailNotifierStrategy implements NotifierStrategy {
     releaseTag: string,
     unsubscribeToken: string,
   ): Promise<void> {
-    const unsubscribeUrl = `${this.appDomain}/api/unsubscribe/${unsubscribeToken}`;
+    const unsubscribeUrl = `${this.appDomain}/unsubscribe/${unsubscribeToken}`;
 
     await this.mailClient.sendMail({
       to: emails,
