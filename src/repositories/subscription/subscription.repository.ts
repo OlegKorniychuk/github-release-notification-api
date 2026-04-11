@@ -54,4 +54,15 @@ export class SubscriptionRepository {
 
     return result || null;
   }
+
+  public async findConfirmedByRepoId(
+    githubRepositoryId: string,
+  ): Promise<Subscription[]> {
+    return await this.db.query.subscriptions.findMany({
+      where: {
+        githubRepositoryId,
+        confirmed: true,
+      },
+    });
+  }
 }
