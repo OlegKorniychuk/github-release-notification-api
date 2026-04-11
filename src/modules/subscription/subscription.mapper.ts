@@ -15,7 +15,7 @@ export const subscriptionMapper: SubscriptionResponseMapper = {
       email: e.email,
       repo: e.githubRepository.name,
       confirmed: e.confirmed,
-      lastSeenTag: e.githubRepository.lastSeenTag,
+      last_seen_tag: e.githubRepository.lastSeenTag,
     }));
   },
 };

@@ -11,15 +11,9 @@ import {
   subscriptionService,
 } from './dependencies-container.js';
 import { routeCache } from './services/cache/cache.middleware.js';
+import { requireApiKey } from './auth/api-key.middleware.js';
 
 const router = Router();
-
-router
-  .route('/subscribe')
-  .post(
-    validateRequest(subscribeSchema),
-    subscriptionController.subscribe.bind(subscriptionController),
-  );
 
 router
   .route('/confirm/:token')
@@ -33,6 +27,15 @@ router
   .get(
     validateRequest(subscriptionTokenSchema),
     subscriptionController.unsubscribe.bind(subscriptionController),
+  );
+
+router.use(requireApiKey);
+
+router
+  .route('/subscribe')
+  .post(
+    validateRequest(subscribeSchema),
+    subscriptionController.subscribe.bind(subscriptionController),
   );
 
 router.route('/subscriptions').get(
