@@ -7,18 +7,21 @@ services:
     ports:
       - '3000:3000'
     environment:
-      - PORT=${PORT}
-      - DATABASE_URL=${DATABASE_URL}
+      - PORT=3000
+      - DATABASE_URL=postgres://postgres:password@db:5432/releases_db
+      - REDIS_URL=redis://redis:6379
+      - API_KEY=secret-api-key
+      - NOTIFICATION_TOKEN_SECRET=test-notification-secret
+
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - EMAIL_SERVICE=${EMAIL_SERVICE}
       - EMAIL_SERVICE_USERNAME=${EMAIL_SERVICE_USERNAME}
       - EMAIL_SERVICE_PASSWORD=${EMAIL_SERVICE_PASSWORD}
-      - NOTIFICATION_TOKEN_SECRET=${NOTIFICATION_TOKEN_SECRET}
-      - REDIS_URL=redis://localhost:6379
-      - API_KEY=secret-api-key
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     restart: no
 
   db:
