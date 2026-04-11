@@ -1,9 +1,9 @@
 import type { GithubRepoRepository } from '../../repositories/github-repo/github-repo.repository.js';
 import type { SubscriptionRepository } from '../../repositories/subscription/subscription.repository.js';
 import type { SubscriptionWithRepository } from '../../repositories/subscription/subscription.types.js';
+import type { EmailQueueClient } from '../../services/email-queue/email-queue.service.js';
 import type { NotificationTokensService } from '../../services/notification-tokens-service/notification-tokens.service.js';
 import { NotificationTokenTypesEnum } from '../../services/notification-tokens-service/token-types.enum.js';
-import type { NotifierStrategy } from '../../services/notifier/notifier.strategy.js';
 import type { RepositoryScanner } from '../../services/scanner/repository-scanner.service.js';
 import {
   AppError,
@@ -16,7 +16,7 @@ export class SubscriptionService {
     private readonly githubRepoRepository: GithubRepoRepository,
     private readonly repoScanner: RepositoryScanner,
     private readonly tokensService: NotificationTokensService,
-    private readonly notifier: NotifierStrategy,
+    private readonly emailQueue: EmailQueueClient,
   ) {}
 
   public async subscribe(
@@ -51,7 +51,10 @@ export class SubscriptionService {
       subscription.id,
     );
 
-    await this.notifier.sendSubscriptionConfirmation(email, confirmToken);
+    await this.emailQueue.queueConfirmationEmail({
+      email,
+      token: confirmToken,
+    });
   }
 
   public async confirmSubscription(token: string): Promise<void> {

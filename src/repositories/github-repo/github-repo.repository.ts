@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm';
 import type { DrizzleClient } from '../../db/client.js';
 import { githubRepositories } from '../../db/schema/repositories.js';
 import type { CreateGithubRepo, GithubRepo } from './github-repo.types.js';
@@ -28,5 +29,19 @@ export class GithubRepoRepository {
       .returning();
 
     return result!;
+  }
+
+  public async findAll(): Promise<GithubRepo[]> {
+    return await this.db.query.githubRepositories.findMany();
+  }
+
+  public async updateTag(id: string, tag: string): Promise<GithubRepo | null> {
+    const [result] = await this.db
+      .update(githubRepositories)
+      .set({ id, lastSeenTag: tag })
+      .where(eq(githubRepositories.id, id))
+      .returning();
+
+    return result || null;
   }
 }
