@@ -15,7 +15,7 @@ export const subscriptions = pgTable(
     githubRepositoryId: uuid('github_repository_id')
       .references(() => githubRepositories.id)
       .notNull(),
-    confirmed: boolean('confirmed').default(false),
+    confirmed: boolean('confirmed').default(false).notNull(),
   },
   (table) => [
     uniqueIndex('repo_email_idx').on(table.email, table.githubRepositoryId),

@@ -1,5 +1,6 @@
 import type { GithubRepoRepository } from '../../repositories/github-repo/github-repo.repository.js';
 import type { SubscriptionRepository } from '../../repositories/subscription/subscription.repository.js';
+import type { SubscriptionWithRepository } from '../../repositories/subscription/subscription.types.js';
 import type { NotificationTokensService } from '../../services/notification-tokens-service/notification-tokens.service.js';
 import { NotificationTokenTypesEnum } from '../../services/notification-tokens-service/token-types.enum.js';
 import type { NotifierStrategy } from '../../services/notifier/notifier.strategy.js';
@@ -97,5 +98,11 @@ export class SubscriptionService {
         AppErrorTypesEnum.entityNotFound,
         'Subscription not found',
       );
+  }
+
+  public async getSubscriptions(
+    email: string,
+  ): Promise<SubscriptionWithRepository[]> {
+    return await this.subscriptionRepository.findByEmailWithRepo(email);
   }
 }

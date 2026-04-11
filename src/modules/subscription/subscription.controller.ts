@@ -3,10 +3,15 @@ import type { SubscriptionService } from './subscription.service.js';
 import type {
   SubscriptionTokenInput,
   SubscribeInput,
+  GetSubscriptionsInput,
 } from './subscription.schema.js';
+import type { SubscriptionResponseMapper } from './subscription.mapper.js';
 
 export class SubscriptionController {
-  constructor(private readonly service: SubscriptionService) {}
+  constructor(
+    private readonly service: SubscriptionService,
+    private readonly responseMapper: SubscriptionResponseMapper,
+  ) {}
 
   public async subscribe(
     req: Request,
@@ -45,5 +50,17 @@ export class SubscriptionController {
     await this.service.unsubscribe(params.token);
 
     res.status(200).json({ message: 'Unsubscribed successfully.' });
+  }
+
+  public async getSubscriptions(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    const query = req.query as GetSubscriptionsInput;
+
+    const subscriptions = await this.service.getSubscriptions(query.email);
+
+    res.status(200).json(this.responseMapper.toListResponse(subscriptions));
   }
 }

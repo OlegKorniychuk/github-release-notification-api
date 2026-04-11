@@ -13,7 +13,9 @@ import { validateRequest } from './utils/middlewares/validateRequest.js';
 import {
   subscriptionTokenSchema,
   subscribeSchema,
+  listSubscriptionsSchema,
 } from './modules/subscription/subscription.schema.js';
+import { subscriptionMapper } from './modules/subscription/subscription.mapper.js';
 
 const githubApiToken = process.env.GITHUB_TOKEN;
 if (!githubApiToken) throw new Error('Github api token missing');
@@ -53,7 +55,10 @@ const subscriptionService = new SubscriptionService(
   tokensService,
   notifier,
 );
-const subscriptionController = new SubscriptionController(subscriptionService);
+const subscriptionController = new SubscriptionController(
+  subscriptionService,
+  subscriptionMapper,
+);
 
 const router = Router();
 
@@ -76,6 +81,13 @@ router
   .get(
     validateRequest(subscriptionTokenSchema),
     subscriptionController.unsubscribe.bind(subscriptionController),
+  );
+
+router
+  .route('/subscriptions')
+  .get(
+    validateRequest(listSubscriptionsSchema),
+    subscriptionController.getSubscriptions.bind(subscriptionController),
   );
 
 export default router;

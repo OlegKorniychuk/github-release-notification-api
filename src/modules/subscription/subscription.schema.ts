@@ -20,7 +20,16 @@ export const subscriptionTokenSchema = z.object({
   }),
 });
 
+export const listSubscriptionsSchema = z.object({
+  query: z.object({
+    email: z.email('Please provide a valid email address'),
+  }),
+});
+
 export type SubscribeInput = z.infer<typeof subscribeSchema>['body'];
 export type SubscriptionTokenInput = z.infer<
   typeof subscriptionTokenSchema
 >['params'];
+export type GetSubscriptionsInput = z.infer<
+  typeof listSubscriptionsSchema
+>['query'];

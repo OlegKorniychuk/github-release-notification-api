@@ -25,13 +25,11 @@ export class SubscriptionRepository {
     return result || null;
   }
 
-  public async findOneWithRepo(id: string) {
-    const result = await this.db.query.subscriptions.findFirst({
-      where: { id },
+  public async findByEmailWithRepo(email: string) {
+    return await this.db.query.subscriptions.findMany({
+      where: { email },
       with: { githubRepository: true },
     });
-
-    return result || null;
   }
 
   public async findOneByRepoAndEmail(

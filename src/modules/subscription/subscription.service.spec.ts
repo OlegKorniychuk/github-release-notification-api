@@ -24,6 +24,7 @@ describe('SubscriptionService', () => {
       confirm: jest.fn(),
       findOneByRepoAndEmail: jest.fn(),
       deleteOne: jest.fn(),
+      findByEmailWithRepo: jest.fn(),
     } as unknown as jest.Mocked<SubscriptionRepository>;
 
     mockGithubRepo = {
@@ -250,6 +251,47 @@ describe('SubscriptionService', () => {
         type: AppErrorTypesEnum.entityNotFound,
         message: 'Subscription not found',
       });
+    });
+  });
+
+  describe('getSubscriptions', () => {
+    const mockEmail = 'test@example.com';
+
+    it('should return an array of subscriptions with repository data', async () => {
+      const mockSubscriptions = [
+        {
+          id: 'sub-1',
+          email: mockEmail,
+          githubRepository: { id: 'repo-1', name: 'golang/go' },
+        },
+        {
+          id: 'sub-2',
+          email: mockEmail,
+          githubRepository: { id: 'repo-2', name: 'facebook/react' },
+        },
+      ];
+      mockSubscriptionRepo.findByEmailWithRepo.mockResolvedValueOnce(
+        mockSubscriptions as any,
+      );
+
+      const result = await service.getSubscriptions(mockEmail);
+
+      expect(mockSubscriptionRepo.findByEmailWithRepo).toHaveBeenCalledWith(
+        mockEmail,
+      );
+      expect(result).toEqual(mockSubscriptions);
+      expect(result.length).toBe(2);
+    });
+
+    it('should return an empty array if the user has no subscriptions', async () => {
+      mockSubscriptionRepo.findByEmailWithRepo.mockResolvedValueOnce([]);
+
+      const result = await service.getSubscriptions(mockEmail);
+
+      expect(mockSubscriptionRepo.findByEmailWithRepo).toHaveBeenCalledWith(
+        mockEmail,
+      );
+      expect(result).toEqual([]);
     });
   });
 });
