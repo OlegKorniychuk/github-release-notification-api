@@ -33,6 +33,7 @@ jobs:
       EMAIL_SERVICE_USERNAME: username@gmail.com
       EMAIL_SERVICE_PASSWORD: password
       NOTIFICATION_TOKEN_SECRET: secret
+      REDIS_URL: redis://localhost:6379
 
     steps:
       - uses: actions/checkout@v4
