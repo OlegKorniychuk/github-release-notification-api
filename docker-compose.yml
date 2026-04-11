@@ -7,9 +7,13 @@ services:
     ports:
       - '3000:3000'
     environment:
-      - PORT=3000
-      - DATABASE_URL=postgres://postgres:password@db:5432/releases_db
+      - PORT=${PORT}
+      - DATABASE_URL=${DATABASE_URL}
       - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - EMAIL_SERVICE=${EMAIL_SERVICE}
+      - EMAIL_SERVICE_USERNAME=${EMAIL_SERVICE_USERNAME}
+      - EMAIL_SERVICE_PASSWORD=${EMAIL_SERVICE_PASSWORD}
+      - NOTIFICATION_TOKEN_SECRET=${NOTIFICATION_TOKEN_SECRET}
     depends_on:
       db:
         condition: service_healthy
