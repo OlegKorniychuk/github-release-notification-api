@@ -34,6 +34,7 @@ jobs:
       EMAIL_SERVICE_PASSWORD: password
       NOTIFICATION_TOKEN_SECRET: secret
       REDIS_URL: redis://localhost:6379
+      API_KEY: api_key
 
     steps:
       - uses: actions/checkout@v4

@@ -1,10 +1,10 @@
+import 'dotenv/config';
 import type { Express } from 'express';
 
 import app from './app.js';
 import { scannerCron, shutdownDependencies } from './dependencies-container.js';
 import type { ScannerCron } from './cron/scanner-cron.js';
-
-const PORT = process.env.PORT || 3000;
+import { env } from './config/envs.js';
 
 const startServer = async (app: Express, scannerCron: ScannerCron) => {
   if (process.env.NODE_ENV !== 'test') {
@@ -12,8 +12,8 @@ const startServer = async (app: Express, scannerCron: ScannerCron) => {
     await scannerCron.startSchedule();
   }
 
-  return app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
+  return app.listen(env.PORT, () => {
+    console.log(`Server listening on port ${env.PORT}`);
   });
 };
 
