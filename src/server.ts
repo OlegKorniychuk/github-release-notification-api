@@ -5,9 +5,11 @@ import app from './app.js';
 import { scannerCron, shutdownDependencies } from './dependencies-container.js';
 import type { ScannerCron } from './cron/scanner-cron.js';
 import { env } from './config/envs.js';
+import { startPrometheus } from './prometheus.js';
 
 const startServer = async (app: Express, scannerCron: ScannerCron) => {
   if (process.env.NODE_ENV !== 'test') {
+    startPrometheus(app);
     console.log('Starting background jobs...');
     await scannerCron.startSchedule();
   }
