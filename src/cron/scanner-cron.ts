@@ -4,8 +4,8 @@ import { Queues } from '../services/email-queue/queues.enum.js';
 import type { ScanRunner } from './scan-runner.js';
 
 export class ScannerCron {
-  private readonly queue: Queue;
-  private readonly worker: Worker;
+  public readonly queue: Queue;
+  public readonly worker: Worker;
   private readonly CRON_PATTERN = '0 * * * *';
 
   constructor(
@@ -19,7 +19,7 @@ export class ScannerCron {
       async () => {
         await this.coordinator.runPeriodicScan();
       },
-      { connection: redisConnection },
+      { connection: redisConnection, autorun: process.env.NODE_ENV !== 'test' },
     );
   }
 

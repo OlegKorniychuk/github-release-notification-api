@@ -9,7 +9,7 @@ import { Queues } from './queues.enum.js';
 import { JobTypesEnum } from './job-types.enum.js';
 
 export class EmailWorker {
-  private readonly worker: Worker;
+  public readonly worker: Worker;
 
   constructor(
     redisConnection: Redis,
@@ -41,7 +41,7 @@ export class EmailWorker {
             console.warn(`Unknown job type: ${job.name}`);
         }
       },
-      { connection: redisConnection },
+      { connection: redisConnection, autorun: process.env.NODE_ENV !== 'test' },
     );
 
     this.worker.on('failed', (job, err) => {

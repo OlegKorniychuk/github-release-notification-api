@@ -6,8 +6,8 @@ import { NotificationTokenTypesEnum } from '../../services/notification-tokens-s
 import type { GithubRepoRepository } from '../../repositories/github-repo/github-repo.repository.js';
 import type { SubscriptionRepository } from '../../repositories/subscription/subscription.repository.js';
 import type { NotificationTokensService } from '../../services/notification-tokens-service/notification-tokens.service.js';
-import type { NotifierStrategy } from '../../services/notifier/notifier.strategy.js';
 import type { RepositoryScanner } from '../../services/scanner/repository-scanner.service.js';
+import type { EmailQueueClient } from '../../services/email-queue/email-queue.service.js';
 
 describe('SubscriptionService', () => {
   let service: SubscriptionService;
@@ -16,7 +16,7 @@ describe('SubscriptionService', () => {
   let mockGithubRepo: jest.Mocked<GithubRepoRepository>;
   let mockRepoScanner: jest.Mocked<RepositoryScanner>;
   let mockTokensService: jest.Mocked<NotificationTokensService>;
-  let mockNotifier: jest.Mocked<NotifierStrategy>;
+  let mockEmailQueue: jest.Mocked<EmailQueueClient>;
 
   beforeEach(() => {
     mockSubscriptionRepo = {
@@ -41,16 +41,17 @@ describe('SubscriptionService', () => {
       validateToken: jest.fn(),
     } as unknown as jest.Mocked<NotificationTokensService>;
 
-    mockNotifier = {
-      sendSubscriptionConfirmation: jest.fn(),
-    } as unknown as jest.Mocked<NotifierStrategy>;
+    mockEmailQueue = {
+      queueConfirmationEmail: jest.fn(),
+      queueNotificationEmail: jest.fn(),
+    } as unknown as jest.Mocked<EmailQueueClient>;
 
     service = new SubscriptionService(
       mockSubscriptionRepo,
       mockGithubRepo,
       mockRepoScanner,
       mockTokensService,
-      mockNotifier,
+      mockEmailQueue,
     );
   });
 
@@ -86,10 +87,10 @@ describe('SubscriptionService', () => {
       expect(mockTokensService.generateConfirmToken).toHaveBeenCalledWith(
         mockSubId,
       );
-      expect(mockNotifier.sendSubscriptionConfirmation).toHaveBeenCalledWith(
-        mockEmail,
-        mockToken,
-      );
+      expect(mockEmailQueue.queueConfirmationEmail).toHaveBeenCalledWith({
+        email: mockEmail,
+        token: mockToken,
+      });
     });
 
     it('should throw AppError if repository exists and user is already subscribed', async () => {
@@ -114,7 +115,7 @@ describe('SubscriptionService', () => {
       );
       expect(mockSubscriptionRepo.createOne).not.toHaveBeenCalled();
       expect(mockTokensService.generateConfirmToken).not.toHaveBeenCalled();
-      expect(mockNotifier.sendSubscriptionConfirmation).not.toHaveBeenCalled();
+      expect(mockEmailQueue.queueConfirmationEmail).not.toHaveBeenCalled();
     });
 
     it('should verify with GitHub and save repo when repository does NOT exist in DB', async () => {
