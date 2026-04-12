@@ -21,6 +21,8 @@ COPY --from=builder /app/dist ./dist
 
 COPY --from=builder /app/drizzle ./drizzle
 
+COPY public ./public
+
 EXPOSE 3000
 
 CMD ["npm", "start"]
