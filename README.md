@@ -2,6 +2,10 @@
 
 This repository contains a RESTful API built with Node.js and Express that allows users to subscribe to email notifications for new GitHub repository releases.
 
+# Hosted Instance
+
+Hosted application is available at <https://github-releases-api.duckdns.org/>
+
 ## Startup Instructions
 
 ### Prerequisites
@@ -54,6 +58,7 @@ npm test
 
 ### Extras Implemented
 
+- **Publicly Hosted**: Added a simple HTML UI and hosted using Oracle OCI. UI available at <https://github-releases-api.duckdns.org/>
 - **Redis Caching:** Route-level caching implemented for GET /api/subscriptions with invalidation upon subscription state changes.
 - **API Key Authentication:** Protected endpoints require an x-api-key header.
 - **Prometheus Metrics:** Basic service indicators exposed via a standard /metrics endpoint.
